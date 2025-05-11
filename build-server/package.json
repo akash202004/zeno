@@ -1,0 +1,14 @@
+{
+  "name": "build-server",
+  "version": "1.0.0",
+  "description": "Clones the repository and builds the project and uploads it to S3",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.806.0"
+  }
+}
