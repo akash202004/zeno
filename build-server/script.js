@@ -1,5 +1,18 @@
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { exec } = require('child_process');
+const mime = require('mime-types')
 const path = require('path');
+const fs = require('fs');
+
+const PROJECT_ID = process.env.PROJECT_ID;
+
+const s3Client = new S3Client({
+    region: '',
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
+});
 
 async function init() {
     console.log('Executing script.js...');
@@ -11,11 +24,32 @@ async function init() {
         console.log(data.toString());
     });
 
-    p.stderr.on('error', (data) => {
+    p.stdout.on('error', (data) => {
         console.error(`Error: ${data.toString()}`);
     });
 
-    p.om('close', function(){
+    p.on('close', async function () {
         console.log('Build process completed');
+        const distFolderPath = path.join(__dirname, 'output', 'dist');
+        const distFolderContent = fs.readdirSync(distFolderPath, { recursive: true });
+
+        for (const filePath of distFolderContent) {
+            if (fs.lstatSync(filePath).isDirectory()) continue;
+
+            console.log(`Uploading ${filePath} to S3...`);
+
+            const command = new PutObjectCommand({
+                Bucket : '',
+                key: `__output/${PROJECT_ID}${filePath}`,
+                Body: fs.createReadStream(filePath),
+                ContentType: mime.lookup(filePath),
+            })
+
+            await s3Client.send(command);
+
+            console.log(`Uploaded ${filePath} to S3`);
+        }
+
+        console.log('All files uploaded to S3');
     })
 }
