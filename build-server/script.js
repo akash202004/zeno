@@ -33,14 +33,15 @@ async function init() {
         const distFolderPath = path.join(__dirname, 'output', 'dist');
         const distFolderContent = fs.readdirSync(distFolderPath, { recursive: true });
 
-        for (const filePath of distFolderContent) {
+        for (const file of distFolderContent) {
+            const filePath = path.join(distFolderPath, file);
             if (fs.lstatSync(filePath).isDirectory()) continue;
 
             console.log(`Uploading ${filePath} to S3...`);
 
             const command = new PutObjectCommand({
-                Bucket : '',
-                key: `__output/${PROJECT_ID}${filePath}`,
+                Bucket: '',
+                key: `__output/${PROJECT_ID}${file}`,
                 Body: fs.createReadStream(filePath),
                 ContentType: mime.lookup(filePath),
             })
